@@ -47,11 +47,11 @@ static class MemoryBlock {
 
         // THEN ask for total memory size
         System.out.print("Enter total memory size: ");
-        int total = input.nextInt();
+        int totalMemorySize = input.nextInt();
         input.nextLine();
 
         // Initialize memory
-        memory.add(new MemoryBlock(0, total - 1, null));
+        memory.add(new MemoryBlock(0, totalMemorySize - 1, null));
 
         // Start loop
         do {
@@ -64,11 +64,9 @@ static class MemoryBlock {
                 case 2: releaseMemory(); break;
                 case 3: compactMemory(); break;
                 case 4: displayMemory(); break;
-                case 5: 
-                    System.out.println("Exiting...");
-                    break;
+                case 5: break;
                 default:
-                    System.out.println("Invalid choice.");
+                    System.out.println("Invalid choice");
             }
 
         } while (choice != 5);
@@ -134,12 +132,12 @@ static class MemoryBlock {
 
     private static int bestFit(int size) {
         int bestIndex = -1;
-        int smallest = Integer.MAX_VALUE;
+        int smallestIndex = Integer.MAX_VALUE;
 
         for (int i = 0; i < memory.size(); i++) {
             MemoryBlock b = memory.get(i);
-            if (b.isFree() && b.size() >= size && b.size() < smallest) {
-                smallest = b.size();
+            if (b.isFree() && b.size() >= size && b.size() < smallestIndex) {
+            	smallestIndex = b.size();
                 bestIndex = i;
             }
         }
@@ -148,12 +146,12 @@ static class MemoryBlock {
 
     private static int worstFit(int size) {
         int worstIndex = -1;
-        int largest = -1;
+        int largestIndex = -1;
 
         for (int i = 0; i < memory.size(); i++) {
             MemoryBlock b = memory.get(i);
-            if (b.isFree() && b.size() >= size && b.size() > largest) {
-                largest = b.size();
+            if (b.isFree() && b.size() >= size && b.size() > largestIndex) {
+            	largestIndex = b.size();
                 worstIndex = i;
             }
         }
@@ -244,4 +242,4 @@ static class MemoryBlock {
         System.out.println("-----------------------------------------------");
     }
 }
-} 
+}
