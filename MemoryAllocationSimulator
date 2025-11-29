@@ -1,9 +1,14 @@
 package CSC227PHASE2;
 
+package OS;
+
+import java.util.LinkedList;
+import java.util.ListIterator;
 import java.util.Scanner;
-import java.util.*;
+
 public class MemoryAllocationSimulator {
 
+    
     static class MemoryBlock {
         int Start, End;
         String process; // null means FREE
@@ -23,201 +28,204 @@ public class MemoryAllocationSimulator {
         }
     }
 
-    class Simulator {
+  
+    static LinkedList<MemoryBlock> memory = new LinkedList<>();
+    static Scanner input = new Scanner(System.in);
 
-        static LinkedList<MemoryBlock> memory = new LinkedList<>();
-        static Scanner input = new Scanner(System.in);
 
-        public static void main(String[] args) {
-            System.out.println("\nMemory Allocation Simulator");
-            System.out.println("-----------------------------------------------");
+    public static void main(String[] args) {
+        System.out.println("\nMemory Allocation Simulator");
+        System.out.println("-----------------------------------------------");
 
-            int choice;
+        System.out.println("1. Request (Allocate) memory");
+        System.out.println("2. Release memory");
+        System.out.println("3. Compact memory");
+        System.out.println("4. Display memory status");
+        System.out.println("5. Exit");
+        System.out.println("-----------------------------------------------");
 
-            System.out.println("1. Request (Allocate) memory");
-            System.out.println("2. Release memory");
-            System.out.println("3. Compact memory");
-            System.out.println("4. Display memory status");
-            System.out.println("5. Exit");
-            System.out.println("-----------------------------------------------");
+        System.out.print("Enter total memory size: ");
+        int total = input.nextInt();
+        input.nextLine();
 
-            System.out.print("Enter total memory size: ");
-            int totalMemorySize = input.nextInt();
+        memory.add(new MemoryBlock(0, total - 1, null));
+
+        int choice;
+
+        do {
+            System.out.print("\nEnter your choice: ");
+            choice = input.nextInt();
             input.nextLine();
 
-            memory.add(new MemoryBlock(0, totalMemorySize - 1, null));
-
-            do {
-                System.out.print("Enter your choice: ");
-                choice = input.nextInt();
-                input.nextLine();
-
-                switch (choice) {
-                    case 1: allocateMemory(); break;
-                    case 2: releaseMemory(); break;
-                    case 3: compactMemory(); break;
-                    case 4: displayMemory(); break;
-                    case 5: break;
-                    default:
-                        System.out.println("Invalid choice");
-                }
-
-            } while (choice != 5);
-
-        }
-
-        private static void allocateMemory() {
-            System.out.print("Enter process name: ");
-            String Pname = input.nextLine();
-
-            System.out.print("Enter size: ");
-            int size = input.nextInt();
-            input.nextLine();
-
-            System.out.print("Enter strategy (F/B/W): ");
-            char strategy = input.nextLine().toUpperCase().charAt(0);
-
-            int index = -1;
-
-            switch (strategy) {
-                case 'F': index = FirstFit(size); break;
-                case 'B': index = BestFit(size); break;
-                case 'W': index = WorstFit(size); break;
-                default:
-                    System.out.println("Invalid strategy.");
-                    return;
-            }
-
-            if (index == -1) {
-                System.out.println("Allocation failed. Not enough free space.");
-                return;
-            }
-
-            MemoryBlock block = memory.get(index);
-
-            int Start = block.Start;
-            int End = Start + size - 1;
-
-            MemoryBlock allocated = new MemoryBlock(Start, End, Pname);
-            MemoryBlock leftover = null;
-
-            if (End < block.End)
-                leftover = new MemoryBlock(End + 1, block.End, null);
-
-            memory.remove(index);
-            memory.add(index, allocated);
-            if (leftover != null)
-                memory.add(index + 1, leftover);
-
-            System.out.println("Process " + Pname + " allocated from " + Start + " to " + End);
-        }
-
-        private static int FirstFit(int size) {
-            for (int i = 0; i < memory.size(); i++)
-                if (memory.get(i).isFree() && memory.get(i).size() >= size)
-                    return i;
-            return -1;
-        }
-
-        private static int BestFit(int size) {
-            int bestIndex = -1;
-            int smallestIndex = Integer.MAX_VALUE;
-
-            for (int i = 0; i < memory.size(); i++) {
-                MemoryBlock b = memory.get(i);
-                if (b.isFree() && b.size() >= size && b.size() < smallestIndex) {
-                    smallestIndex = b.size();
-                    bestIndex = i;
-                }
-            }
-            return bestIndex;
-        }
-
-        private static int WorstFit(int size) {
-            int worstIndex = -1;
-            int largestIndex = -1;
-
-            for (int i = 0; i < memory.size(); i++) {
-                MemoryBlock b = memory.get(i);
-                if (b.isFree() && b.size() >= size && b.size() > largestIndex) {
-                    largestIndex = b.size();
-                    worstIndex = i;
-                }
-            }
-            return worstIndex;
-        }
-
-        private static void releaseMemory() {
-            System.out.print("Enter process name to release: ");
-            String Pname = input.nextLine();
-
-            boolean found = false;
-
-            for (MemoryBlock b : memory) {
-                if (!b.isFree() && b.process.equals(Pname)) {
-                    b.process = null;
-                    found = true;
+            switch (choice) {
+                case 1: allocateMemory(); break;
+                case 2: releaseMemory(); break;
+                case 3: compactMemory(); break;
+                case 4: displayMemory(); break;
+                case 5:
+                    System.out.println("Exiting...");
                     break;
-                }
+                default:
+                    System.out.println("Invalid choice.");
             }
 
-            if (!found) {
-                System.out.println("Process not found.");
+        } while (choice != 5);
+    }
+
+    private static void allocateMemory() {
+        System.out.print("Enter process name: ");
+        String name = input.nextLine();
+
+        System.out.print("Enter size: ");
+        int size = input.nextInt();
+        input.nextLine();
+
+        System.out.print("Enter strategy (F/B/W): ");
+        char strategy = input.nextLine().toUpperCase().charAt(0);
+
+        int index = -1;
+
+        switch (strategy) {
+            case 'F': index = firstFit(size); break;
+            case 'B': index = bestFit(size); break;
+            case 'W': index = worstFit(size); break;
+            default:
+                System.out.println("Invalid strategy.");
                 return;
-            }
-
-            mergeFreeBlocks();
-            System.out.println("Process " + Pname + " released.");
         }
 
-        private static void mergeFreeBlocks() {
-            ListIterator<MemoryBlock> it = memory.listIterator();
-            MemoryBlock prev = null;
+        if (index == -1) {
+            System.out.println("Allocation failed. Not enough free space.");
+            return;
+        }
 
-            while (it.hasNext()) {
-                MemoryBlock curr = it.next();
-                if (prev != null && prev.isFree() && curr.isFree()) {
-                    prev.End = curr.End;
-                    it.remove();
-                } else {
-                    prev = curr;
-                }
+        MemoryBlock block = memory.get(index);
+
+        int start = block.Start;
+        int end = start + size - 1;
+
+        MemoryBlock allocated = new MemoryBlock(start, end, name);
+        MemoryBlock leftover = null;
+
+        if (end < block.End)
+            leftover = new MemoryBlock(end + 1, block.End, null);
+
+        memory.remove(index);
+        memory.add(index, allocated);
+        if (leftover != null) memory.add(index + 1, leftover);
+
+        System.out.println("Process " + name + " allocated from " + start + " to " + end);
+    }
+
+    private static int firstFit(int size) {
+        for (int i = 0; i < memory.size(); i++)
+            if (memory.get(i).isFree() && memory.get(i).size() >= size)
+                return i;
+        return -1;
+    }
+
+    private static int bestFit(int size) {
+        int bestIndex = -1;
+        int smallest = Integer.MAX_VALUE;
+
+        for (int i = 0; i < memory.size(); i++) {
+            MemoryBlock b = memory.get(i);
+            if (b.isFree() && b.size() >= size && b.size() < smallest) {
+                smallest = b.size();
+                bestIndex = i;
+            }
+        }
+        return bestIndex;
+    }
+
+    private static int worstFit(int size) {
+        int worstIndex = -1;
+        int largest = -1;
+
+        for (int i = 0; i < memory.size(); i++) {
+            MemoryBlock b = memory.get(i);
+            if (b.isFree() && b.size() >= size && b.size() > largest) {
+                largest = b.size();
+                worstIndex = i;
+            }
+        }
+        return worstIndex;
+    }
+
+
+    private static void releaseMemory() {
+        System.out.print("Enter process name to release: ");
+        String name = input.nextLine();
+
+        boolean found = false;
+
+        for (MemoryBlock b : memory) {
+            if (!b.isFree() && b.process.equals(name)) {
+                b.process = null;
+                found = true;
+                break;
             }
         }
 
-        private static void compactMemory() {
-            int nextFreeStart = 0;
-            LinkedList<MemoryBlock> newMemory = new LinkedList<>();
-
-            for (MemoryBlock b : memory) {
-                if (!b.isFree()) {
-                    int size = b.size();
-                    MemoryBlock newBlock = new MemoryBlock(nextFreeStart, nextFreeStart + size - 1, b.process);
-                    nextFreeStart += size;
-                    newMemory.add(newBlock);
-                }
-            }
-
-            int lastAddress = memory.getLast().End;
-            if (nextFreeStart <= lastAddress)
-                newMemory.add(new MemoryBlock(nextFreeStart, lastAddress, null));
-
-            memory = newMemory;
-            System.out.println("Memory compacted successfully.");
+        if (!found) {
+            System.out.println("Process not found.");
+            return;
         }
 
-        private static void displayMemory() {
-            System.out.println("\nMemory status:");
-            System.out.println("-----------------------------------------------");
+        mergeFreeBlocks();
+        System.out.println("Process " + name + " released.");
+    }
 
-            for (MemoryBlock b : memory) {
-                if (b.isFree())
-                    System.out.println("Addresses [" + b.Start + " : " + b.End + "] Unused (Free)");
-                else
-                    System.out.println("Addresses [" + b.Start + " : " + b.End + "] Process " + b.process);
+    private static void mergeFreeBlocks() {
+        ListIterator<MemoryBlock> it = memory.listIterator();
+        MemoryBlock prev = null;
+
+        while (it.hasNext()) {
+            MemoryBlock curr = it.next();
+            if (prev != null && prev.isFree() && curr.isFree()) {
+                prev.End = curr.End;
+                it.remove();
+            } else {
+                prev = curr;
             }
-
-            System.out.println("-----------------------------------------------");
         }
+    }
+
+    private static void compactMemory() {
+
+        int nextFreeStart = 0;
+        LinkedList<MemoryBlock> newMemory = new LinkedList<>();
+
+        // Move allocated blocks
+        for (MemoryBlock b : memory) {
+            if (!b.isFree()) {
+                int blockSize = b.size();
+                newMemory.add(new MemoryBlock(nextFreeStart, nextFreeStart + blockSize - 1, b.process));
+                nextFreeStart += blockSize;
+            }
+        }
+
+        // Add one big free block
+        int lastAddress = memory.getLast().End;
+        if (nextFreeStart <= lastAddress)
+            newMemory.add(new MemoryBlock(nextFreeStart, lastAddress, null));
+
+        memory = newMemory;
+        System.out.println("Memory compacted successfully.");
+    }
+
+
+    private static void displayMemory() {
+        System.out.println("\nMemory status:");
+        System.out.println("-----------------------------------------------");
+
+        for (MemoryBlock b : memory) {
+            if (b.isFree())
+                System.out.println("Addresses [" + b.Start + " : " + b.End + "] Unused (Free)");
+            else
+                System.out.println("Addresses [" + b.Start + " : " + b.End + "] Process " + b.process);
+        }
+
+        System.out.println("-----------------------------------------------");
     }
 }
